@@ -18,9 +18,23 @@
           />
         </el-select>
       </div>
+      <div class="category-select-box float-left">
+        <el-tree-select
+          v-model="searchInfo.categoryId"
+          :data="categories"
+          :render-after-expand="false"
+          :default-value="null"
+          placeholder="类目"
+          check-strictly=true
+          :props="{ label: 'name', value: 'id' }"
+        />
+      </div>
       <div class="float-left">
         <el-button type="primary" @click="doSearch">搜索</el-button>
         <el-button @click="resetSearch">重置</el-button>
+      </div>
+      <div class="float-right">
+        <el-button type="primary" :icon="EditPen" @click="router.push('add-topic')">添加题目</el-button>
       </div>
     </div>
     <div class="topic-list-box">
@@ -89,10 +103,11 @@
 
 <script setup>
 import { onMounted, ref} from 'vue'
-import { topicApi } from "@/api/api.js";
+import {categoryApi, topicApi} from "@/api/api.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {dateFormat} from "@/utils/date.js";
-import {Search} from "@element-plus/icons-vue";
+import {EditPen, Search} from "@element-plus/icons-vue";
+import router from "@/router/index.js";
 
 
 const topics = ref([])
@@ -108,8 +123,10 @@ const pageInfo = ref({
 const searchInfo = ref({
   title: '',
   type: '',
-  category: 0
+  categoryId: null
 })
+
+const categories = ref([])
 
 const types = ref([
   {
@@ -138,7 +155,7 @@ const types = ref([
 // 重置搜索内容
 const resetSearch = () => {
   searchInfo.value.title = ''
-  searchInfo.value.category = 0
+  searchInfo.value.categoryId = null
   searchInfo.value.type = ''
   pageInfo.value.page = 1
   getTopics(pageInfo.value, searchInfo.value)
@@ -169,6 +186,17 @@ const getTopics = (pageInfo, searchInfo) => {
       loading.value = false
     }else {
       ElMessage.error(res.message);
+    }
+  })
+}
+
+// 获取全部类目
+const getCategoryList = () => {
+  categoryApi.getCategoryList().then(res => {
+    if (res.code === 200){
+      categories.value = res.data
+    }else {
+      ElMessage.error(res.message)
     }
   })
 }
@@ -223,6 +251,7 @@ const updateState = async (id) => {
 
 onMounted(() => {
   getTopics(pageInfo.value)
+  getCategoryList()
 })
 </script>
 
@@ -244,7 +273,10 @@ onMounted(() => {
   margin-left: 0;
 }
 .type-select-box{
-  width: 240px;
+  width: 200px;
+}
+.category-select-box{
+  width: 200px;
 }
 .topic-pagination-box{
   margin-top: 10px;

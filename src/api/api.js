@@ -37,7 +37,9 @@ const categoryApi = {
   // 增加类目
   addCategory: (params) => post('/Categories/AddNew', params),
   // 更新类目
-  updateCategory: (params) => put('/Categories/Update', params)
+  updateCategory: (params) => put('/Categories/Update', params),
+  // 获取全部类目不分页
+  getCategoryList: () => get('/Categories/GetList')
 }
 
 // 题目API

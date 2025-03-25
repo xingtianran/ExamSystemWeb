@@ -1,6 +1,11 @@
 <template>
   <div>
+    <el-radio-group size="small" v-model="isCollapsed" class="switch-box">
+      <el-radio-button :value="false">+</el-radio-button>
+      <el-radio-button :value="true">-</el-radio-button>
+    </el-radio-group>
     <el-menu
+      :collapse="isCollapsed"
       unique-opened
       :default-active="active"
       class="el-menu-vertical-demo"
@@ -46,9 +51,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, provide } from 'vue';
+import { ref, onMounted, watch, provide, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { routes } from '@/router';
+import { defineProps, defineEmits } from 'vue';
+
+const props = defineProps({
+  isCollapsed: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const emits = defineEmits(['toggleCollapse']);
 
 const menuList = ref([]);
 const active = ref('');
@@ -71,15 +86,34 @@ const handleClose = (key, keyPath) => {
 // 监听路由变化更新激活状态
 watch(() => route.path, () => {
   active.value = route.path;
+  // 假设子路由路径包含 '/child' 时自动收缩
+  if (route.path.includes('/add-topic')) {
+    emits('toggleCollapse', true);
+  }
 });
 
 // 提供 active 和 menuList 供面包屑组件注入
 provide('active', active);
 provide('menuList', menuList);
+
+// 同步父组件的 isCollapsed 状态
+const isCollapsed = computed({
+  get() {
+    return props.isCollapsed;
+  },
+  set(value) {
+    emits('toggleCollapse', value);
+  }
+});
 </script>
 
 <style scoped>
 a {
   text-decoration: none;
+}
+.switch-box{
+  margin-top: 8px;
+  margin-bottom: 10px;
+  margin-left: 5px;
 }
 </style>

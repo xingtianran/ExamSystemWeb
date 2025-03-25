@@ -11,7 +11,8 @@ const index = import('@/page/dashboard/index.vue');
 // 内容管理
 const managePaper = import('@/page/content/manage-paper.vue');
 const manageTopic = import('@/page/content/manage-topic.vue');
-const  manageTeam = import('@/page/content/manage-team.vue');
+const addTopic = import('@/page/content/add-topic.vue');
+const manageTeam = import('@/page/content/manage-team.vue');
 
 // 运营管理
 const manageCategory = import('@/page/operation/manage-category.vue');
@@ -53,6 +54,12 @@ export const routes= [
             name: '题目管理',
             icon:'postcard',
             component: manageTopic
+          },
+          {
+            path: 'add-topic',
+            name: '题目增加',
+            icon:'printer',
+            component: addTopic
           },
           {
             path: 'manage-team',

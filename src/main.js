@@ -17,7 +17,7 @@ import {
   Tickets,
   Fries,
   Grape,
-  User, Operation, Bicycle
+  User, Operation, Bicycle, Printer
 } from "@element-plus/icons-vue";
 
 const app = createApp(App)
@@ -31,6 +31,7 @@ app.component('house', House)
 app.component('collection', Collection)
 app.component('tickets', Tickets)
 app.component('postcard', Postcard)
+app.component('printer', Printer)
 app.component('fries', Fries)
 app.component('operation', Operation)
 app.component('grape', Grape)
