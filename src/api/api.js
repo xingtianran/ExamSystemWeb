@@ -47,7 +47,9 @@ const topicApi = {
   // 获取全部题目
   getTopics: (params) => get('Topics/GetAll', params),
   // 更改状态
-  updateState: (params) => put('/Topics/UpdateState/' + params)
+  updateState: (params) => put('/Topics/UpdateState/' + params),
+  // 增加题目
+  addTopic: (params) => post('/Topics/AddNew', params)
 }
 
 // 登录API
