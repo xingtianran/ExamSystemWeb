@@ -5,11 +5,11 @@
         <el-col :span="10">
           <div class="content-left-box">
             <div>
-              <el-form :model="top" label-width="auto">
-                <el-form-item label="题目标题">
+              <el-form ref="formRef" :rules="rules" :model="topic" label-width="auto">
+                <el-form-item label="题目标题" prop="title">
                   <el-input v-model="topic.title" />
                 </el-form-item>
-                <el-form-item label="题目题型">
+                <el-form-item label="题目题型" prop="type">
                   <el-select @change="ChangeTypeSelect" v-model="topic.type" placeholder="题型">
                     <el-option
                       v-for="item in types"
@@ -19,7 +19,7 @@
                     />
                   </el-select>
                 </el-form-item>
-                <el-form-item label="题目类目">
+                <el-form-item label="题目类目" prop="categoryId">
                   <el-tree-select
                     v-model="topic.categoryId"
                     :data="categories"
@@ -49,7 +49,8 @@
               <el-table :data="options" border style="width: 100%">
                 <el-table-column prop="value" label="Answer" width="80">
                   <template #default="scope">
-                    <el-radio v-model="topic.answer" :value="scope.row.id">{{scope.row.id}}</el-radio>
+                    <el-radio v-if="topic.type === '0'" v-model="topic.answer" :value="scope.row.id">{{scope.row.id}}</el-radio>
+                    <el-checkbox v-else-if="topic.type === '1'" v-model="selectedOptions" :value="scope.row.id">{{scope.row.id}}</el-checkbox>
                   </template>
                 </el-table-column>
                 <el-table-column prop="value" label="Content">
@@ -75,12 +76,13 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue'
-import {categoryApi, topicApi} from "@/api/api.js";
+import {onMounted, ref, watch} from 'vue'
+import {categoryApi, loginApi, topicApi} from "@/api/api.js";
 import {ElMessage} from "element-plus";
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import router from "@/router/index.js";
+import {useRoute} from "vue-router";
 
 const categories = ref([])
 const isReveal = ref(false)
@@ -98,8 +100,21 @@ const topic = ref({
   column4: '',
 })
 
+const selectedOptions = ref([])
 
+const rules = {
+  title: [
+    { required: true, message: '请输入题目标题', trigger: 'blur' }
+  ],
+  type: [
+    { required: true, message: '请输入题目题型', trigger: 'change' }
+  ],
+  categoryId: [
+    { required: true, message: '请输入题目类目', trigger: 'change' }
+  ]
+};
 
+const formRef = ref(null);
 const options = ref([
   {
     id: 'A',
@@ -154,7 +169,7 @@ const getCategoryList = () => {
 }
 // 当题型选择器改变时
 const ChangeTypeSelect = () => {
-  if(topic.value.type === "0") {
+  if(topic.value.type === "0" || topic.value.type === "1") {
     isReveal.value = true
   }else {
     isReveal.value = false
@@ -162,22 +177,68 @@ const ChangeTypeSelect = () => {
 }
 // 增加题目
 const addItem = async () => {
-  topic.value.column1 = options.value[0].content
-  topic.value.column2 = options.value[1].content
-  topic.value.column3 = options.value[2].content
-  topic.value.column4 = options.value[3].content
-  const res = await topicApi.addTopic(topic.value)
-  if(res.code === 200){
-    ElMessage.success(res.message)
-    await router.push('/content/manage-topic')
-  }else {
-    ElMessage.error(res.message)
-  }
-
+  formRef.value.validate( async (valid) => {
+    if (valid) {
+      topic.value.column1 = options.value[0].content
+      topic.value.column2 = options.value[1].content
+      topic.value.column3 = options.value[2].content
+      topic.value.column4 = options.value[3].content
+      // 如果是选择题的话，要检查选项
+      if(topic.value.type === "0" || topic.value.type === "1"){
+        // 选项的话就判断一个
+        if(topic.value.column1 === ""){
+          ElMessage.error("选项不能为空")
+          return
+        }
+      }
+      // 如果是多选题的话，处理答案
+      if (topic.value.type === "1") {
+        selectedOptions.value.forEach((item) => {
+          topic.value.answer += item + "#";
+        })
+        topic.value.answer = topic.value.answer.slice(0, -1)
+      }
+      if(topic.value.answer === ""){
+        ElMessage.error("答案不能为空")
+        return
+      }
+      const res = await topicApi.addTopic(topic.value)
+      if (res.code === 200) {
+        ElMessage.success(res.message)
+        await router.push('/content/manage-topic')
+      } else {
+        ElMessage.error(res.message)
+      }
+    } else {
+      ElMessage.error('请填写完整信息');
+    }
+  });
 }
+
+const route = useRoute();
+watch(() => route, (newRoute, oldRoute) => {
+  // 在这里可以执行一些初始化操作，例如重置表单
+  formRef.value.resetFields();
+  // 重置其他组件状态
+  topic.value = {
+    title: '',
+    type: '',
+    content: '# 题目内容',
+    categoryId: null,
+    score: 0,
+    answer: '',
+    column1: '',
+    column2: '',
+    column3: '',
+    column4: '',
+  }
+  selectedOptions.value = [];
+  isReveal.value = false;
+}, { deep: true });
 
 onMounted(() => {
   getCategoryList()
+  formRef.value.resetFields();
 })
 </script>
 
