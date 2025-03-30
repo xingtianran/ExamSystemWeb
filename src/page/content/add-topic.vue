@@ -45,8 +45,8 @@
                 </el-form-item>
               </el-form>
             </div>
-            <div v-if="isReveal">
-              <el-table :data="options" border style="width: 100%">
+            <div>
+              <el-table v-if="isSelectReveal" :data="selectOptions" border style="width: 100%">
                 <el-table-column prop="value" label="Answer" width="80">
                   <template #default="scope">
                     <el-radio v-if="topic.type === '0'" v-model="topic.answer" :value="scope.row.id">{{scope.row.id}}</el-radio>
@@ -64,6 +64,46 @@
                   </template>
                 </el-table-column>
               </el-table>
+
+              <el-table v-else-if="isJudgeReveal" :data="judgeOptions" border style="width: 100%">
+                <el-table-column prop="value" label="Answer" width="80">
+                  <template #default="scope">
+                    <el-radio  v-model="topic.answer" :value="scope.row.id">{{scope.row.id}}</el-radio>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="value" label="Content">
+                  <template #default="scope">
+                    <el-input
+                      v-model="scope.row.content"
+                      :rows="2"
+                      type="textarea"
+                      placeholder="选项内容"
+                    />
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <el-table v-else-if="isBlankReveal" :data="blankOptions" border style="width: 100%">
+                <el-table-column prop="value" label="Answer" width="80">
+                  <template #default="scope">
+                    <span>{{scope.row.id}}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="value" label="Content">
+                  <template #default="scope">
+                    <el-input
+                      v-model="scope.row.content"
+                      :rows="2"
+                      type="textarea"
+                      placeholder="填空内容"
+                    />
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <div v-else-if="isShortAnswerReveal">
+                <MdEditor style="height: 300px" v-model="topic.answer" :preview="false" />
+              </div>
             </div>
           </div>
         </el-col>
@@ -77,7 +117,7 @@
 
 <script setup>
 import {onMounted, ref, watch} from 'vue'
-import {categoryApi, loginApi, topicApi} from "@/api/api.js";
+import {categoryApi, topicApi} from "@/api/api.js";
 import {ElMessage} from "element-plus";
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
@@ -85,9 +125,13 @@ import router from "@/router/index.js";
 import {useRoute} from "vue-router";
 
 const categories = ref([])
-const isReveal = ref(false)
+const isSelectReveal = ref(false)
+const isJudgeReveal = ref(false)
+const isBlankReveal = ref(false)
+const isShortAnswerReveal = ref(false)
 
 const topic = ref({
+  id: '',
   title: '',
   type: '',
   content: '# 题目内容',
@@ -100,6 +144,7 @@ const topic = ref({
   column4: '',
 })
 
+// 多选答案
 const selectedOptions = ref([])
 
 const rules = {
@@ -115,7 +160,9 @@ const rules = {
 };
 
 const formRef = ref(null);
-const options = ref([
+
+// 选择表格
+const selectOptions = ref([
   {
     id: 'A',
     content: ''
@@ -130,6 +177,38 @@ const options = ref([
   },
   {
     id: 'D',
+    content: ''
+  }
+])
+
+// 判断表格
+const judgeOptions = ref([
+  {
+    id: 'T',
+    content: '正确'
+  },
+  {
+    id: 'F',
+    content: '错误'
+  }
+])
+
+// 填空表格
+const blankOptions = ref([
+  {
+    id: '一',
+    content: ''
+  },
+  {
+    id: '二',
+    content: ''
+  },
+  {
+    id: '三',
+    content: ''
+  },
+  {
+    id: '四',
     content: ''
   }
 ])
@@ -152,7 +231,7 @@ const types = ref([
     value: '3'
   },
   {
-    name:'问答题',
+    name:'简答题',
     value: '4'
   }
 ])
@@ -170,21 +249,56 @@ const getCategoryList = () => {
 // 当题型选择器改变时
 const ChangeTypeSelect = () => {
   if(topic.value.type === "0" || topic.value.type === "1") {
-    isReveal.value = true
+    isSelectReveal.value = true
+    isJudgeReveal.value = false
+    isBlankReveal.value = false
+    isShortAnswerReveal.value = false
+  }else if(topic.value.type === "2"){
+    isJudgeReveal.value = true
+    isSelectReveal.value = false
+    isBlankReveal.value = false
+    isShortAnswerReveal.value = false
+  }else if(topic.value.type === "3") {
+    isBlankReveal.value = true
+    isSelectReveal.value = false
+    isJudgeReveal.value = false
+    isShortAnswerReveal.value = false
+  }else if(topic.value.type === "4"){
+    isShortAnswerReveal.value = true
+    isSelectReveal.value = false
+    isJudgeReveal.value = false
+    isBlankReveal.value = false
   }else {
-    isReveal.value = false
+    isShortAnswerReveal.value = false
+    isSelectReveal.value = false
+    isJudgeReveal.value = false
+    isBlankReveal.value = false
   }
 }
 // 增加题目
 const addItem = async () => {
   formRef.value.validate( async (valid) => {
     if (valid) {
-      topic.value.column1 = options.value[0].content
-      topic.value.column2 = options.value[1].content
-      topic.value.column3 = options.value[2].content
-      topic.value.column4 = options.value[3].content
-      // 如果是选择题的话，要检查选项
-      if(topic.value.type === "0" || topic.value.type === "1"){
+      // 选择题和填空题都需要判断column
+      if(topic.value.type === "0" || topic.value.type === "1" || topic.value.type === "2" || topic.value.type === "3"){
+        // 填充数据
+        if(topic.value.type === "0" || topic.value.type === "1"){
+          topic.value.column1 = selectOptions.value[0].content
+          topic.value.column2 = selectOptions.value[1].content
+          topic.value.column3 = selectOptions.value[2].content
+          topic.value.column4 = selectOptions.value[3].content
+        }else if(topic.value.type === "2"){
+          topic.value.column1 = judgeOptions.value[0].content
+          topic.value.column2 = judgeOptions.value[1].content
+        }else if(topic.value.type === "3"){
+          // 填空题答案为第一个值，用不着先填上
+          topic.value.answer = blankOptions.value[0].content
+
+          topic.value.column1 = blankOptions.value[0].content
+          topic.value.column2 = blankOptions.value[1].content
+          topic.value.column3 = blankOptions.value[2].content
+          topic.value.column4 = blankOptions.value[3].content
+        }
         // 选项的话就判断一个
         if(topic.value.column1 === ""){
           ElMessage.error("选项不能为空")
@@ -193,6 +307,8 @@ const addItem = async () => {
       }
       // 如果是多选题的话，处理答案
       if (topic.value.type === "1") {
+        // 先置空
+        topic.value.answer = ""
         selectedOptions.value.forEach((item) => {
           topic.value.answer += item + "#";
         })
@@ -202,7 +318,13 @@ const addItem = async () => {
         ElMessage.error("答案不能为空")
         return
       }
-      const res = await topicApi.addTopic(topic.value)
+      let res = null
+      // id存在是编辑，不存在是增加
+      if(topic.value.id){
+        res = await topicApi.updateTopic(topic.value)
+      }else {
+        res = await topicApi.addTopic(topic.value)
+      }
       if (res.code === 200) {
         ElMessage.success(res.message)
         await router.push('/content/manage-topic')
@@ -232,11 +354,46 @@ watch(() => route, (newRoute, oldRoute) => {
     column3: '',
     column4: '',
   }
-  selectedOptions.value = [];
-  isReveal.value = false;
+  selectOptions.value = []
+  judgeOptions.value = []
+  blankOptions.value = []
+  isSelectReveal.value = false
+  isJudgeReveal.value = false
+  isBlankReveal.value = false
+  isShortAnswerReveal.value = false
 }, { deep: true });
 
 onMounted(() => {
+  const id = route.query.id;
+  // 如果是编辑，就渲染数据
+  if (id) {
+    topicApi.getTopic(id).then(res => {
+      if(res.code === 200){
+        const data = res.data
+        topic.value.id = data.id
+        topic.value.title = data.title
+        topic.value.content = data.content
+        topic.value.categoryId = data.categoryId
+        topic.value.score = data.score
+        topic.value.answer = data.answer
+        // 根据题目类型，选择性显示答案内容
+        topic.value.type = data.type
+        if(topic.value.type === "0" || topic.value.type === "1"){
+          selectOptions.value[0].content = data.column1
+          selectOptions.value[1].content = data.column2
+          selectOptions.value[2].content = data.column3
+          selectOptions.value[3].content = data.column4
+          isSelectReveal.value = true
+          // 如果是多选的话，处理selectedOptions数据
+          if(topic.value.type === "1"){
+            selectedOptions.value = topic.value.answer.split('#')
+          }
+        }
+      }else {
+        ElMessage.error(res.message)
+      }
+    })
+  }
   getCategoryList()
   formRef.value.resetFields();
 })

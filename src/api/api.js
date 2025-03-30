@@ -49,7 +49,13 @@ const topicApi = {
   // 更改状态
   updateState: (params) => put('/Topics/UpdateState/' + params),
   // 增加题目
-  addTopic: (params) => post('/Topics/AddNew', params)
+  addTopic: (params) => post('/Topics/AddNew', params),
+  // 删除题目
+  deleteTopic: (params) => del('/Topics/Delete/' + params),
+  // 获取题目
+  getTopic: (params) => get('/Topics/GetSingle/' + params),
+  // 编辑题目
+  updateTopic: (params) => put('/Topics/Update', params)
 }
 
 // 登录API

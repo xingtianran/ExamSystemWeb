@@ -34,7 +34,7 @@
         <el-button @click="resetSearch">重置</el-button>
       </div>
       <div class="float-right">
-        <el-button type="primary" :icon="EditPen" @click="router.push('add-topic')">添加题目</el-button>
+        <el-button type="primary" :icon="EditPen" @click="router.push('/content/add-topic')">添加题目</el-button>
       </div>
     </div>
     <div class="topic-list-box">
@@ -69,10 +69,7 @@
         </el-table-column>
         <el-table-column label="Handle">
           <template #default="scope">
-            <el-button size="small"  @click="deleteItem(scope.row)">
-              详情
-            </el-button>
-            <el-button size="small" type="primary" @click="deleteItem(scope.row)">
+            <el-button size="small" type="primary" @click="editItem(scope.row.id)">
               编辑
             </el-button>
             <el-button size="small" type="danger" @click="deleteItem(scope.row)">
@@ -116,7 +113,7 @@ const loading = ref(false)
 
 const pageInfo = ref({
   page : 1,
-  size : 6,
+  size : 8,
   totalPage : 0
 })
 
@@ -231,23 +228,33 @@ const updateState = async (id) => {
 }
 
 // 删除题目
-/*const deleteItem = (data) => {
-  ElMessageBox.confirm(`确认要删除ID为 <strong style="color: #409EFF">${data.id}</strong> 的图片吗？`, '提示', {
+const deleteItem = (data) => {
+  console.log("asdasdasdasdas")
+  ElMessageBox.confirm(`确认要删除ID为 <strong style="color: #409EFF">${data.id}</strong> 的题目吗？`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     dangerouslyUseHTMLString: true,
     buttonSize: "small"
   }).then(() => {
-    imageApi.deleteImage(data.id).then(res => {
+    topicApi.deleteTopic(data.id).then(res => {
       if(res.code === 200){
         ElMessage.success(res.message)
-        getImages(pageInfo.value, searchInfo.value)
+        getTopics(pageInfo.value, searchInfo.value)
       }else {
         ElMessage.error(res.message)
       }
     })
   })
-}*/
+}
+// 编辑题目
+const editItem = (id) => {
+  router.push({
+    path: '/content/add-topic',
+    query: {
+      id: id
+    }
+  });
+}
 
 onMounted(() => {
   getTopics(pageInfo.value)
