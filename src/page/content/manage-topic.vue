@@ -229,7 +229,6 @@ const updateState = async (id) => {
 
 // 删除题目
 const deleteItem = (data) => {
-  console.log("asdasdasdasdas")
   ElMessageBox.confirm(`确认要删除ID为 <strong style="color: #409EFF">${data.id}</strong> 的题目吗？`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',

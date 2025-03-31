@@ -10,6 +10,7 @@ const index = import('@/page/dashboard/index.vue');
 
 // 内容管理
 const managePaper = import('@/page/content/manage-paper.vue');
+const addPaper = import('@/page/content/add-paper.vue');
 const manageTopic = import('@/page/content/manage-topic.vue');
 const addTopic = import('@/page/content/add-topic.vue');
 const manageTeam = import('@/page/content/manage-team.vue');
@@ -48,6 +49,12 @@ export const routes= [
             name: '试卷管理',
             icon: 'tickets',
             component: managePaper
+          },
+          {
+            path: 'add-paper',
+            name: '试卷增加',
+            icon: 'brush',
+            component: addPaper
           },
           {
             path: 'manage-topic',

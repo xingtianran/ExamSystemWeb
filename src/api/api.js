@@ -58,6 +58,15 @@ const topicApi = {
   updateTopic: (params) => put('/Topics/Update', params)
 }
 
+const paperApi = {
+  // 获取全部试卷
+  getPapers: (params) => get('/Papers/GetAll', params),
+  // 更新状态
+  updateState: (params) => put('/Papers/UpdateState/' + params),
+  // 删除试卷
+  deletePaper: (params) => del('/Papers/Delete/' + params)
+}
+
 // 登录API
 const loginApi = {
   // 用户登录
@@ -69,6 +78,7 @@ export {
   imageApi,
   categoryApi,
   topicApi,
+  paperApi,
   loginApi
 };
 

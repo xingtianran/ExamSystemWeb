@@ -40,7 +40,7 @@
                   />
                 </el-form-item>
                 <el-form-item>
-                  <el-button type="primary" @click="addItem">添加</el-button>
+                  <el-button type="primary" @click="addItem">完成</el-button>
                   <el-button type="info" @click="router.push('/content/manage-topic')">返回</el-button>
                 </el-form-item>
               </el-form>
@@ -378,6 +378,7 @@ onMounted(() => {
         topic.value.answer = data.answer
         // 根据题目类型，选择性显示答案内容
         topic.value.type = data.type
+        // 单选和多选
         if(topic.value.type === "0" || topic.value.type === "1"){
           selectOptions.value[0].content = data.column1
           selectOptions.value[1].content = data.column2
@@ -388,6 +389,24 @@ onMounted(() => {
           if(topic.value.type === "1"){
             selectedOptions.value = topic.value.answer.split('#')
           }
+          // 判断
+        }else if(topic.value.type === "2"){
+          judgeOptions.value[0].content = data.column1
+          judgeOptions.value[1].content = data.column2
+          isJudgeReveal.value = true
+          // 填空
+        }else if(topic.value.type === "3"){
+          topic.value.answer = data.column1
+
+          blankOptions.value[0].content = data.column1
+          blankOptions.value[1].content = data.column2
+          blankOptions.value[2].content = data.column3
+          blankOptions.value[3].content = data.column4
+          isBlankReveal.value = true
+          // 简答题
+        }else if (topic.value.type === "4"){
+          topic.value.answer = data.answer
+          isShortAnswerReveal.value = true
         }
       }else {
         ElMessage.error(res.message)

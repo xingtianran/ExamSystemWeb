@@ -87,7 +87,7 @@ const handleClose = (key, keyPath) => {
 watch(() => route.path, () => {
   active.value = route.path;
   // 假设子路由路径包含 '/child' 时自动收缩
-  if (route.path.includes('/add-topic')) {
+  if (route.path.includes('/add-topic') || route.path.includes('/add-paper')) {
     emits('toggleCollapse', true);
   }
 });
