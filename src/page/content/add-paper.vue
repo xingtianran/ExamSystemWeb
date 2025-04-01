@@ -13,10 +13,10 @@
             <el-button style="width: 100%" size="small" type="primary">保存试卷</el-button>
           </div>
           <div class="new-left-topic-box clear-fix" v-for="(item, index) in topicListBlocks" :key="index">
-            <el-text tag="b" type="primary" size="large">{{item.id}}</el-text>
+            <el-text tag="b" type="primary" size="large">{{'第 ' + item.id + ' 大题'}}</el-text>
             <el-button class="float-right" link type="primary" size="large" :icon="Delete">删除</el-button>
             <el-divider style="margin-top: 10px; margin-bottom: 10px" />
-            <el-text>共 20 题，共 50 分</el-text>
+            <el-text>共 {{ item.topics.length }} 题，共 {{computedScore(item.topics)}} 分</el-text>
           </div>
         </el-card>
       </el-col>
@@ -62,12 +62,31 @@
           <el-card v-if="topicListBlocks.length === 0" shadow="never">
             <el-text>请点击右侧【增加大题】开始增加数据</el-text>
           </el-card>
-          <el-card class="new-topic-list-box clear-fix" shadow="never" v-for="(item, index) in topicListBlocks" :key="index">
-            <div class="float-left">
-              <el-input disabled style="width: 200px" :model-value="item.id"></el-input>
+          <el-card class="new-topic-list-box" shadow="never" v-for="(item, index) in topicListBlocks" :key="index">
+            <div class="clear-fix">
+              <div class="float-left">
+                <el-input disabled style="width: 200px" :model-value="'第 ' + item.id + ' 大题'"></el-input>
+              </div>
+              <div class="float-left">
+                <el-button :icon="Plus" @click="addTopicIds(item.id)">添加题目</el-button>
+              </div>
             </div>
-            <div class="float-left">
-              <el-button :icon="Plus" @click="topicDialogVisible = true">添加题目</el-button>
+            <div v-for="(childItem, index) in item.topics">
+              <el-divider style="margin-top: 10px;margin-bottom: 10px" />
+              <div>
+                <div>
+                  <el-text>{{childItem.title}}</el-text>
+                </div>
+                <div>
+                  <el-text>{{childItem.content}}</el-text>
+                </div>
+                <div v-if="childItem.type === '0' || childItem.type === '1'">
+                  <el-text>{{childItem.column1}}</el-text><br/>
+                  <el-text>{{childItem.column2}}</el-text><br/>
+                  <el-text>{{childItem.column3}}</el-text><br/>
+                  <el-text>{{childItem.column4}}</el-text>
+                </div>
+              </div>
             </div>
           </el-card>
         </div>
@@ -76,7 +95,9 @@
   </div>
 
   <div>
-    <el-dialog v-model="topicDialogVisible" class="clear-fix" title="题目列表" width="80%">
+    <el-dialog destroy-on-close
+               v-model="topicDialogVisible"
+               class="clear-fix" title="题目列表" width="80%">
       <div class="clear-fix">
         <div class="float-left" style="width: 180px">
           <el-input
@@ -112,12 +133,12 @@
         </div>
 
         <div class="float-right">
-          <el-button type="primary" :icon="Plus">选择 {{selectedRows.length}} 项</el-button>
+          <el-button type="primary" :icon="Plus" @click="selectTopics">选择 {{selectedRowKeys.length}} 项</el-button>
         </div>
       </div>
       <div class="topic-info-box">
-        <el-table @selection-change="handleSelectionChange"
-                  :row-key="getRowKey"
+        <el-table ref="tableRef"
+                  @selection-change="handleSelectionChange"
                   v-loading="loading"
                   :data="topics"  style="width: 100%">
           <el-table-column type="selection" width="55" />
@@ -164,7 +185,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from "vue";
+import {computed, nextTick, onMounted, ref, toRefs, watch} from "vue";
 import {categoryApi, topicApi} from "@/api/api.js";
 import {ElMessage} from "element-plus";
 import {Delete, Plus, Search} from "@element-plus/icons-vue";
@@ -211,6 +232,8 @@ const types = ref([
   }
 ])
 
+const topicAllId = ref([])
+
 const categories = ref([])
 const topics = ref([])
 const loading = ref(false)
@@ -220,13 +243,15 @@ const topicListBlocks = ref([]);
 
 const topicDialogVisible = ref(false)
 
-// 选择的记录
+// 本页选中的
 const selectedRows = ref([])
-// 存储所有选中行的 key
+// 选中的所有
 const selectedRowKeys = ref([]);
 
-// 设置行标识
-const getRowKey = (row) => row.id;
+const tableRef = ref(null);
+
+// 当前大题
+const currentTopicSet = ref(0)
 
 // 获取全部类目
 const getCategoryList = () => {
@@ -247,13 +272,16 @@ const getTopics = (pageInfo, searchInfo) => {
   }
   topicApi.getTopics(params).then(res => {
     if(res.code === 200){
-      topics.value = res.data
-      topics.value.forEach((row) => {
-        if (selectedRowKeys.value.includes(getRowKey(row.id))) {
-          selectedRows.value.push(row.id);
-        }
-      });
+      topics.value = res.data.filter(item => !topicAllId.value.includes(item.id))
       pageInfo.totalPage = res.totalPage
+      // 恢复选中状态
+      nextTick(() => {
+        topics.value.forEach((row) => {
+          if (selectedRowKeys.value.includes(row.id)) {
+            tableRef.value.toggleRowSelection(row, true);
+          }
+        });
+      });
       loading.value = false
     }else {
       ElMessage.error(res.message);
@@ -262,10 +290,15 @@ const getTopics = (pageInfo, searchInfo) => {
 }
 
 // 增加答题
+// 只能有三道大题
 const addTopicBlock = () => {
   let index = topicListBlocks.value.length
+  if(index > 2){
+    ElMessage.warning("仅能有三道大题")
+    return
+  }
   topicListBlocks.value.push({
-    id: '第 ' + (index + 1) + ' 大题',
+    id: index + 1,
     topics: []
   });
 };
@@ -289,13 +322,76 @@ const resetSearch = () => {
 }
 // 选择的内容
 const handleSelectionChange = (val) => {
-  selectedRows.value = val
-  selectedRowKeys.value = val.map((row) => getRowKey(row));
+  selectedRows.value = val.map((item) => item.id)
+  selectedRowKeys.value = [...new Set([...selectedRowKeys.value, ...selectedRows.value])];
 }
+
+// 添加题目按钮
+const addTopicIds = (id) => {
+  // 赋值给当前题目id
+  currentTopicSet.value = id
+  topicDialogVisible.value = true
+  getTopics(pageInfo.value)
+}
+
+// 确认选择题目
+const selectTopics = () => {
+  if(selectedRowKeys.value.length === 0){
+    ElMessage.warning("请选择题目")
+    return
+  }
+  let ids = ''
+  selectedRowKeys.value.forEach(item => {
+    ids += item + "/"
+  })
+  ids = ids.slice(0, -1)
+  // 获取题目详情
+  topicApi.getPartTopics(ids).then(res => {
+    if(res.code === 200){
+      if(currentTopicSet.value === 1){
+        topicListBlocks.value[0].topics = [...topicListBlocks.value[0].topics, ...res.data]
+      }else if(currentTopicSet.value === 2){
+        topicListBlocks.value[1].topics = [...topicListBlocks.value[1].topics, ...res.data];
+      }else if(currentTopicSet.value === 3){
+        topicListBlocks.value[2].topics = [...topicListBlocks.value[2].topics, ...res.data];
+      }
+      const idArray = res.data.map(item => item.id);
+      topicAllId.value = [...new Set([...topicAllId.value, ...idArray])];
+      topicDialogVisible.value = false
+    }else {
+      ElMessage.error(res.message)
+    }
+  })
+}
+
+// 监听对话框的显示状态变化
+watch(topicDialogVisible, (newValue) => {
+  if (!newValue) {
+    // 对话框关闭后的操作
+    selectedRows.value = [];
+    selectedRowKeys.value = [];
+    searchInfo.value.title = "";
+    searchInfo.value.type = "";
+    searchInfo.value.categoryId = null;
+    pageInfo.value.page = 1
+    // 可以根据需要添加更多的清理操作，比如重置表格的选中状态等
+    tableRef.value.clearSelection();
+  }
+});
+
+const computedScore = (topics) => {
+  return computed(() => {
+    let score = 0
+    topics.forEach(item => {
+      score += item.score
+    })
+    return score
+  });
+};
+
 
 onMounted(() => {
   getCategoryList()
-  getTopics(pageInfo.value)
 })
 </script>
 

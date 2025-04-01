@@ -55,7 +55,9 @@ const topicApi = {
   // 获取题目
   getTopic: (params) => get('/Topics/GetSingle/' + params),
   // 编辑题目
-  updateTopic: (params) => put('/Topics/Update', params)
+  updateTopic: (params) => put('/Topics/Update', params),
+  // 获取部分题目
+  getPartTopics: (params) => get('/Topics/GetPart?ids=' + params)
 }
 
 const paperApi = {
