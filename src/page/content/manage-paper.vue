@@ -51,9 +51,6 @@
         </el-table-column>
         <el-table-column label="Handle">
           <template #default="scope">
-            <el-button size="small" type="primary" @click="editItem(scope.row.id)">
-              编辑
-            </el-button>
             <el-button size="small" type="danger" @click="deleteItem(scope.row)">
               删除
             </el-button>

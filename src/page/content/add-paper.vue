@@ -4,13 +4,13 @@
       <el-col :span="6">
         <el-card class="left-box" shadow="never">
           <div>
-            <el-text tag="b">题目总数：</el-text>
+            <el-text tag="b">题目总数：0</el-text>
           </div>
           <div class="left-score-box">
-            <el-text tag="b">试卷总分：</el-text>
+            <el-text tag="b">试卷总分：0</el-text>
           </div>
           <div>
-            <el-button style="width: 100%" size="small" type="primary">保存试卷</el-button>
+            <el-button style="width: 100%" size="small" type="primary" @click="savePaper">保存试卷</el-button>
           </div>
           <div class="new-left-topic-box clear-fix" v-for="(item, index) in topicListBlocks" :key="index">
             <el-text tag="b" type="primary" size="large">{{'第 ' + item.id + ' 大题'}}</el-text>
@@ -26,16 +26,16 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <div>
-                <el-form :model="paper" label-width="auto" style="max-width: 600px">
-                  <el-form-item>
+                <el-form :model="paper" label-width="auto" style="max-width: 600px" :rules="rules">
+                  <el-form-item prop="title">
                     <template #label>
                       <el-text tag="b">试卷标题：</el-text>
                     </template>
                     <el-input v-model="paper.title" />
                   </el-form-item>
-                  <el-form-item>
+                  <el-form-item prop="categoryId">
                     <template #label>
-                      <el-text tag="b">试卷标题：</el-text>
+                      <el-text tag="b">试卷类目：</el-text>
                     </template>
                     <el-tree-select
                       v-model="paper.categoryId"
@@ -74,17 +74,64 @@
             <div v-for="(childItem, index) in item.topics">
               <el-divider style="margin-top: 10px;margin-bottom: 10px" />
               <div>
-                <div>
-                  <el-text>{{childItem.title}}</el-text>
+                <div style="font-size: small">
+                    <span style="color: #606266">{{childItem.title}}</span>
                 </div>
-                <div>
-                  <el-text>{{childItem.content}}</el-text>
+                <div style="margin-top: 3px; margin-bottom: 6px;">
+                  <span style="color: #409EFF">【{{computedType(childItem.type)}}】</span>
+                  <span style="color: #606266">{{childItem.content}}</span>
                 </div>
                 <div v-if="childItem.type === '0' || childItem.type === '1'">
-                  <el-text>{{childItem.column1}}</el-text><br/>
-                  <el-text>{{childItem.column2}}</el-text><br/>
-                  <el-text>{{childItem.column3}}</el-text><br/>
-                  <el-text>{{childItem.column4}}</el-text>
+                    <el-text>
+                      <p>
+                        <span style="color: #409EFF;font-weight: bold">A</span>
+                        &nbsp;
+                        <span>{{childItem.column1}}</span>
+                      </p>
+                      <p>
+                        <span style="color: #409EFF;font-weight: bold">B</span>
+                        &nbsp;
+                        <span>{{childItem.column2}}</span>
+                      </p>
+                      <p>
+                        <span style="color: #409EFF;font-weight: bold">C</span>
+                        &nbsp;
+                        <span>{{childItem.column3}}</span>
+                      </p>
+                      <p>
+                        <span style="color: #409EFF;font-weight: bold">D</span>
+                        &nbsp;
+                        <span>{{childItem.column4}}</span>
+                      </p>
+                    </el-text>
+                </div>
+
+                <div v-else-if="childItem.type === '2'">
+                      <el-text>
+                        <p>
+                          <span style="color: #409EFF;font-weight: bold">T</span>
+                          &nbsp;
+                          <span>{{childItem.column1}}</span>
+                        </p>
+                        <p>
+                          <span style="color: #409EFF;font-weight: bold">F</span>
+                          &nbsp;
+                          <span>{{childItem.column2}}</span>
+                        </p>
+                      </el-text>
+                </div>
+
+                <div>
+                    <el-text>
+                      <span style="color: #409EFF;font-weight: bold">【答案】</span>
+                      <span v-if="childItem.type === '3'">
+                        {{childItem.column1}}&nbsp;
+                        {{childItem.column2}}&nbsp;
+                        {{childItem.column3}}&nbsp;
+                        {{childItem.column4}}&nbsp;
+                      </span>
+                      <span v-else>{{childItem.answer}}</span>
+                    </el-text>
                 </div>
               </div>
             </div>
@@ -186,10 +233,11 @@
 
 <script setup>
 import {computed, nextTick, onMounted, ref, toRefs, watch} from "vue";
-import {categoryApi, topicApi} from "@/api/api.js";
+import {categoryApi, paperApi, topicApi} from "@/api/api.js";
 import {ElMessage} from "element-plus";
 import {Delete, Plus, Search} from "@element-plus/icons-vue";
 import {dateFormat} from "@/utils/date.js";
+import router from "@/router/index.js";
 
 
 const paper = ref({
@@ -232,6 +280,15 @@ const types = ref([
   }
 ])
 
+const rules = {
+  title: [
+    { required: true, message: '请输入题目标题', trigger: 'blur' }
+  ],
+  categoryId: [
+    { required: true, message: '请输入题目类目', trigger: 'change' }
+  ]
+};
+
 const topicAllId = ref([])
 
 const categories = ref([])
@@ -252,6 +309,12 @@ const tableRef = ref(null);
 
 // 当前大题
 const currentTopicSet = ref(0)
+
+// 题目总数
+const topicNumber = ref(0)
+
+// 试卷总分
+const paperScore = ref(0)
 
 // 获取全部类目
 const getCategoryList = () => {
@@ -332,7 +395,24 @@ const addTopicIds = (id) => {
   currentTopicSet.value = id
   topicDialogVisible.value = true
   getTopics(pageInfo.value)
+  // 计算题目数量和总分
+  // if(topicListBlocks.value.length > 0)
+  //   computeNumberAndScore()
 }
+
+// 计算题目数量和总分
+// const computeNumberAndScore = () => {
+//   let tempScore = 0;
+//   let tempNumber = 0;
+//   for(let item in topicListBlocks.value){
+//     tempNumber += item.topics.length
+//     for (let childItem in item.topics){
+//       tempScore += childItem.score
+//     }
+//   }
+//   topicNumber.value = tempNumber
+//   paperScore.value = tempScore
+// }
 
 // 确认选择题目
 const selectTopics = () => {
@@ -379,6 +459,7 @@ watch(topicDialogVisible, (newValue) => {
   }
 });
 
+// 计算题目分数
 const computedScore = (topics) => {
   return computed(() => {
     let score = 0
@@ -389,6 +470,52 @@ const computedScore = (topics) => {
   });
 };
 
+// 处理题型格式
+const computedType = (type) => {
+  return computed(() => {
+    switch (type) {
+      case '0':
+        return '单选题'
+      case '1':
+        return '多选题'
+      case '2':
+        return '判断题'
+      case '3':
+        return '填空题'
+      case '4':
+        return '问答题'
+    }
+  })
+}
+
+// 保存试卷
+const savePaper = async () => {
+  const data = {
+    title: paper.value.title,
+    categoryId: paper.value.categoryId,
+    topicsSets: topicListBlocks.value
+  }
+  const res = await paperApi.AddPaper(JSON.stringify(data, removeCircularReferences()))
+  if(res.code === 200){
+    ElMessage.success(res.message)
+    await router.push('/content/manage-paper')
+  }else {
+    ElMessage.error(res.message)
+  }
+}
+
+const removeCircularReferences = () => {
+  const seen = new WeakSet();
+  return function (key, value) {
+    if (typeof value === 'object' && value!== null) {
+      if (seen.has(value)) {
+        return;
+      }
+      seen.add(value);
+    }
+    return value;
+  };
+}
 
 onMounted(() => {
   getCategoryList()

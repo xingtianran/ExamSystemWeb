@@ -51,6 +51,18 @@ export function post(url, data = {}) {
   });
 }
 
+// post json
+export function postJson(url, data = {}) {
+  return service({
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    url,
+    method: 'post',
+    data
+  });
+}
+
 // 封装 put 请求
 export function put(url, data = {}) {
   return service({
