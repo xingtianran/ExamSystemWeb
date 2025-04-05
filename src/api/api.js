@@ -13,7 +13,11 @@ const userApi = {
   // 锁定用户
   lockUser: (params) => del('/Users/LockUser/' + params),
   // 解锁用户
-  unLockUser: (params) => put('/Users/UnLockUser/' + params)
+  unLockUser: (params) => put('/Users/UnLockUser/' + params),
+  // 获取用户数量
+  getCount: () => get('/Users/GetCount'),
+  // 退出登录
+  logout: () => del('/Users/Logout')
 };
 
 // 图片API
@@ -57,9 +61,14 @@ const topicApi = {
   // 编辑题目
   updateTopic: (params) => put('/Topics/Update', params),
   // 获取部分题目
-  getPartTopics: (params) => get('/Topics/GetPart?ids=' + params)
+  getPartTopics: (params) => get('/Topics/GetPart?ids=' + params),
+  // 获取题目数量
+  getCount: () => get('/Topics/GetCount'),
+  // 获取最新的题目
+  getNewTopics: (params) => get('/Topics/GetNew/' + params)
 }
 
+// 试卷API
 const paperApi = {
   // 获取全部试卷
   getPapers: (params) => get('/Papers/GetAll', params),
@@ -68,7 +77,25 @@ const paperApi = {
   // 删除试卷
   deletePaper: (params) => del('/Papers/Delete/' + params),
   // 增加试卷
-  AddPaper: (data) => postJson('/Papers/AddNew', data)
+  AddPaper: (data) => postJson('/Papers/AddNew', data),
+  // 获取试卷数量
+  getCount: () => get('/Papers/GetCount')
+}
+
+// 群组API
+const teamApi = {
+  // 获取全部群组
+  getTeams: (params) => get('/Teams/GetAll', params),
+  // 增加群组
+  addTeam: (data) => post('/Teams/AddNew', data),
+  // 更改群组状态
+  updateState: (params) => put('/Teams/UpdateState/' + params),
+  // 删除群组
+  deleteTeam: (params) => del('/Teams/Delete/' + params),
+  // 更新群组
+  updateTeam: (data) => put('/Teams/Update', data),
+  // 获取群组数量
+  getCount: () => get('/Teams/GetCount')
 }
 
 // 登录API
@@ -77,12 +104,14 @@ const loginApi = {
   login: (params) => get('/Users/Login', params)
 };
 
+
 export {
   userApi,
   imageApi,
   categoryApi,
   topicApi,
   paperApi,
+  teamApi,
   loginApi
 };
 

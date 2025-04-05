@@ -4,10 +4,12 @@
       <el-col :span="6">
         <el-card class="left-box" shadow="never">
           <div>
-            <el-text tag="b">题目总数：0</el-text>
+            <el-text tag="b">题目总数：</el-text>
+            <el-text tag="b" type="primary">{{topicNumber}}</el-text>
           </div>
           <div class="left-score-box">
-            <el-text tag="b">试卷总分：0</el-text>
+            <el-text tag="b">试卷分数：</el-text>
+            <el-text tag="b" type="primary">{{paperScore}}</el-text>
           </div>
           <div>
             <el-button style="width: 100%" size="small" type="primary" @click="savePaper">保存试卷</el-button>
@@ -395,25 +397,8 @@ const addTopicIds = (id) => {
   currentTopicSet.value = id
   topicDialogVisible.value = true
   getTopics(pageInfo.value)
-  // 计算题目数量和总分
-  // if(topicListBlocks.value.length > 0)
-  //   computeNumberAndScore()
+
 }
-
-// 计算题目数量和总分
-// const computeNumberAndScore = () => {
-//   let tempScore = 0;
-//   let tempNumber = 0;
-//   for(let item in topicListBlocks.value){
-//     tempNumber += item.topics.length
-//     for (let childItem in item.topics){
-//       tempScore += childItem.score
-//     }
-//   }
-//   topicNumber.value = tempNumber
-//   paperScore.value = tempScore
-// }
-
 // 确认选择题目
 const selectTopics = () => {
   if(selectedRowKeys.value.length === 0){
@@ -434,6 +419,12 @@ const selectTopics = () => {
         topicListBlocks.value[1].topics = [...topicListBlocks.value[1].topics, ...res.data];
       }else if(currentTopicSet.value === 3){
         topicListBlocks.value[2].topics = [...topicListBlocks.value[2].topics, ...res.data];
+      }
+      // 获取总分和题目数量
+      for(let item of res.data){
+        console.log(item)
+        paperScore.value += item.score
+        topicNumber.value++
       }
       const idArray = res.data.map(item => item.id);
       topicAllId.value = [...new Set([...topicAllId.value, ...idArray])];
