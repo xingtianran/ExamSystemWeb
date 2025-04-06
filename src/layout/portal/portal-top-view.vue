@@ -1,6 +1,6 @@
 <template>
   <el-menu
-    :default-active="activeIndex"
+    :default-active="active"
     class="el-menu-demo"
     mode="horizontal"
     :ellipsis="false"
@@ -13,6 +13,18 @@
         alt="Element logo"
       />
     </el-menu-item>
+    <template v-for="item in menuList" :key="item.path">
+      <router-link :to="item.path" v-if="!item.children">
+        <el-menu-item :index="item.path">
+          <template #title>
+            <el-icon>
+              <component :is="item.icon"></component>
+            </el-icon>
+            <span>{{ item.name }}</span>
+          </template>
+        </el-menu-item>
+      </router-link>
+    </template>
     <el-sub-menu index="1">
       <template #title>
         <el-avatar class="avatar-box" :src="imagePrefix + user.avatar" />
@@ -29,17 +41,19 @@
   </el-menu>
 </template>
 
+
 <script setup>
 import {getCurrentInstance, onMounted, ref} from 'vue'
 import {userApi} from "@/api/api.js";
 import {ElMessage} from "element-plus";
 import {Van} from "@element-plus/icons-vue";
-import router from "@/router/index.js";
+import router, {routes} from "@/router/index.js";
+import {useRoute} from "vue-router";
 
 const instance = getCurrentInstance();
 const imagePrefix = instance.appContext.config.globalProperties.$imagePrefix;
 
-const activeIndex = ref('1')
+const active = ref('');
 const handleSelect = (key) => {
   if(key === "1"){
     // 退出登录
@@ -48,6 +62,11 @@ const handleSelect = (key) => {
 }
 
 const user = ref({})
+
+const menuList = ref([]);
+
+// 获取当前路由
+const route = useRoute();
 
 // 获取当前用户信息
 const getUserInfo = () => {
@@ -73,6 +92,9 @@ const logout = () => {
 }
 
 onMounted(() => {
+  const menuRoute = routes[1];
+  menuList.value = menuRoute.children;
+  active.value = route.path
   getUserInfo()
 })
 </script>
@@ -81,8 +103,8 @@ onMounted(() => {
 .el-menu--horizontal > .el-menu-item:nth-child(1) {
   margin-right: auto;
 }
-.avatar-box{
-  width: 35px;
-  height: 35px;
+
+a {
+  text-decoration: none;
 }
 </style>

@@ -53,7 +53,7 @@
 <script setup>
 import { ref, onMounted, watch, provide, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { routes } from '@/router';
+import { routes } from '@/router/index.js';
 import { defineProps, defineEmits } from 'vue';
 
 const props = defineProps({

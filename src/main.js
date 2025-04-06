@@ -7,8 +7,11 @@ import 'element-plus/dist/index.css'
 import App from './App.vue'
 import router from './router'
 
-import leftView from '@/layout/left-view.vue'
-import topView from '@/layout/top-view.vue'
+import leftView from '@/layout/admin/left-view.vue'
+import topView from '@/layout/admin/top-view.vue'
+
+import portalTopView from '@/layout/portal/portal-top-view.vue'
+
 import {
   House,
   Collection,
@@ -17,7 +20,7 @@ import {
   Tickets,
   Fries,
   Grape,
-  User, Operation, Bicycle, Printer,Brush
+  User, Operation, Bicycle, Printer,Brush,Notebook, OfficeBuilding
 } from "@element-plus/icons-vue";
 
 const app = createApp(App)
@@ -25,6 +28,9 @@ const app = createApp(App)
 // 页面
 app.component("left-view", leftView)
 app.component("top-view", topView)
+
+// 门户
+app.component('portal-top-view', portalTopView)
 
 // 图标
 app.component('house', House)
@@ -40,8 +46,12 @@ app.component('camera', Camera)
 app.component('user', User)
 app.component('bicycle', Bicycle)
 
+app.component('notebook', Notebook)
+app.component('officeBuilding', OfficeBuilding)
+
+
 // 图片前缀
-app.config.globalProperties.$imagePrefix = '/api/Oss/DownloadFile/';
+app.config.globalProperties.$imagePrefix = '/api/admin/Oss/DownloadFile/';
 
 
 

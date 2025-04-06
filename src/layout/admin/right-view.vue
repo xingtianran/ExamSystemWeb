@@ -1,7 +1,7 @@
 <template>
   <div class="breadcrumb-box">
     <el-breadcrumb separator="/">
-      <el-breadcrumb-item :to="'/'" @click="goToHome">
+      <el-breadcrumb-item :to="'/admin'" @click="goToHome">
         首页
       </el-breadcrumb-item>
       <el-breadcrumb-item>{{ parentRouteName }}</el-breadcrumb-item>
@@ -65,7 +65,7 @@ const initParentRouteName = () => {
 initParentRouteName();
 
 const goToHome = () => {
-  router.push('/');
+  router.push('/admin');
   // 触发更新导航栏
   updateNav();
 };

@@ -2,41 +2,57 @@ import { createRouter, createWebHistory } from 'vue-router';
 import {userApi} from "@/api/api.js";
 import {ElMessage} from "element-plus";
 
-const baseView = import('@/layout/base-view.vue');
-const rightView = import('@/layout/right-view.vue');
+const adminBaseView = import('@/layout/admin/base-view.vue');
+const rightView = import('@/layout/admin/right-view.vue');
+
+const portalBaseView = import('@/layout/portal/portal-base-view.vue');
 
 // 首页
-const index = import('@/page/dashboard/index.vue');
+const adminIndex = import('@/page/admin/dashboard/index.vue');
+
+// 门户首页
+const portalIndex = import('@/page/portal/index.vue');
 
 // 内容管理
-const managePaper = import('@/page/content/manage-paper.vue');
-const addPaper = import('@/page/content/add-paper.vue');
-const manageTopic = import('@/page/content/manage-topic.vue');
-const addTopic = import('@/page/content/add-topic.vue');
-const manageTeam = import('@/page/content/manage-team.vue');
+const managePaper = import('@/page/admin/content/manage-paper.vue');
+const addPaper = import('@/page/admin/content/add-paper.vue');
+const manageTopic = import('@/page/admin/content/manage-topic.vue');
+const addTopic = import('@/page/admin/content/add-topic.vue');
+const manageTeam = import('@/page/admin/content/manage-team.vue');
+const publicPaper = import('@/page/admin/content/public-paper.vue')
 
 // 运营管理
-const manageCategory = import('@/page/operation/manage-category.vue');
-const manageImage = import('@/page/operation/manage-image.vue');
+const manageCategory = import('@/page/admin/operation/manage-category.vue');
+const manageImage = import('@/page/admin/operation/manage-image.vue');
 
 // 用户管理
-const userList = import('@/page/user/user-list.vue');
+const userList = import('@/page/admin/user/user-list.vue');
+
+// 门户群组信息
+const teamInfo = import('@/page/portal/team-info.vue')
+
+// 我的信息
+const userInfo = import('@/page/portal/user-info.vue')
 
 // 登录
 const login = import('@/page/login/login-content.vue');
 
+// 做题
+const doPaper = import('@/page/portal/do-paper.vue')
+
+
 
 export const routes= [
   {
-    path: '',
-    component: baseView,
-    redirect: '/index',
+    path: '/admin',
+    component: adminBaseView,
+    redirect: '/admin/index',
     children: [
       {
-        path: '/index',
+        path: '/admin/index',
         name: '首页',
         icon: 'house',
-        component: index
+        component: adminIndex
       },
       {
         path: '/content',
@@ -73,6 +89,12 @@ export const routes= [
             name: '组管理',
             icon:'fries',
             component: manageTeam
+          },
+          {
+            path: 'public-paper',
+            name: '试卷发布',
+            icon: 'notebook',
+            component: publicPaper
           }
         ]
       },
@@ -111,6 +133,35 @@ export const routes= [
         ]
       }
     ]
+  },
+  {
+    path: '',
+    component: portalBaseView,
+    redirect: '/index',
+    children: [
+      {
+        path: '/index',
+        name: '在线考试',
+        icon: 'notebook',
+        component: portalIndex
+      },
+      {
+        path: '/team-info',
+        name: '群组信息',
+        icon: 'officeBuilding',
+        component: teamInfo
+      },
+      {
+        path: '/user-info',
+        name: '我的信息',
+        icon: 'user',
+        component: userInfo
+      }
+    ]
+  },
+  {
+    path: '/do-paper',
+    component: doPaper
   },
   {
     path: '/login',

@@ -51,6 +51,9 @@
         </el-table-column>
         <el-table-column label="Handle">
           <template #default="scope">
+            <el-button size="small" type="primary" @click="selectItem(scope.row.id)">
+              选择试卷
+            </el-button>
             <el-button size="small" type="danger" @click="deleteItem(scope.row)">
               删除
             </el-button>
@@ -204,6 +207,17 @@ const deleteItem = (data) => {
 const editItem = (id) => {
   router.push({
     path: '/content/add-topic',
+    query: {
+      id: id
+    }
+  });
+}
+
+
+// 选择试卷
+const selectItem = (id) =>{
+  router.push({
+    path: '/content/public-paper',
     query: {
       id: id
     }
