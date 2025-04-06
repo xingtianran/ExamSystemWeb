@@ -119,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import {ref, reactive, computed, onMounted, onUnmounted, nextTick} from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {useRoute} from "vue-router";
 import {userApi} from "@/api/api.js";
@@ -127,7 +127,7 @@ import {userApi} from "@/api/api.js";
 // 模拟试卷数据
 const paper = reactive({
   title: 'Vue3 基础知识考试',
-  duration: 3600, // 考试时长（秒）
+  duration: 0, // 考试时长（秒）
   questions: [
     {
       type: 'single',
@@ -163,7 +163,7 @@ const paper = reactive({
 // 响应式状态
 const currentIndex = ref(0)
 const answers = ref([])
-const timeLeft = ref(paper.duration)
+
 const isSubmitted = ref(false)
 const showSubmitDialog = ref(false)
 
@@ -174,7 +174,17 @@ const answeredCount = computed(() => answers.value.filter(a => a !== undefined).
 
 // 倒计时处理
 let timer = null
+// 响应式状态
+const timeLeft = ref(0) // 初始化为0
+
 const startTimer = () => {
+  // 确保有有效时长再启动
+  if (paper.duration <= 0) {
+    ElMessage.error('考试时间配置错误')
+    return
+  }
+
+  timeLeft.value = paper.duration // 确保使用最新值
   timer = setInterval(() => {
     if (timeLeft.value > 0) {
       timeLeft.value--
@@ -183,6 +193,7 @@ const startTimer = () => {
     }
   }, 1000)
 }
+
 
 // 格式化时间显示
 const formatTime = (seconds) => {
@@ -239,29 +250,41 @@ const submitExam = async () => {
 }
 
 // 获取单个考试详情
-const getExamInfo = (paperId, teamId) =>{
-  userApi.getExamDetail(paperId, teamId).then(res => {
-    if(res.code === 200){
-      const data = res.data
-      paper.title = data.title
-    }else {
-      ElMessage.error(res.message)
-    }
-  })
+const getExamInfo = async (paperId, teamId) => {
+  const res = await userApi.getExamDetail(paperId, teamId)
+  if(res.code === 200){
+    const data = res.data
+    paper.title = data.title
+    // 计算考试时长
+    const deadline = data.tempTime
+    // 转换为Date对象
+    const deadlineDate = new Date(deadline);
+    // 获取当前时间戳（UTC时间）
+    const now = new Date();
+    // 计算时间差（毫秒）
+    const timeDifferenceMs = deadlineDate.getTime() - now.getTime();
+    // 转换为秒并确保非负
+    const remainingSeconds = Math.max(Math.floor(timeDifferenceMs / 1000), 0);
+    paper.duration = remainingSeconds
+  }else {
+    ElMessage.error(res.message)
+  }
 }
 
 const route = useRoute();
 
-onMounted(() => {
-  answers.value = Array(questions.value.length).fill(undefined)
-  startTimer()
-
+onMounted(async () => {
   // 获取考试详情
   const paperId = route.query.paperId
   const teamId = route.query.teamId
-  if(paperId && teamId){
-    getExamInfo(paperId, teamId)
+  if (paperId && teamId) {
+    await getExamInfo(paperId, teamId)
   }
+
+  answers.value = Array(questions.value.length).fill(undefined)
+  // 添加延迟确保数据更新
+  await nextTick()
+  startTimer()
 })
 
 onUnmounted(() => clearInterval(timer))
