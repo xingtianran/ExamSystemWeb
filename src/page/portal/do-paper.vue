@@ -1,9 +1,11 @@
 <template>
   <div class="exam-container">
     <!-- 考试头部 -->
-    <el-card class="exam-header">
+    <el-card class="exam-header" shadow="never">
       <div class="header-content">
-        <h2>{{ paper.title }}</h2>
+        <el-text size="large">
+          <h2>{{paper.title}}</h2>
+        </el-text>
         <div class="exam-info">
           <el-space>
             <el-tag type="info">剩余时间：{{ formatTime(timeLeft) }}</el-tag>
@@ -11,24 +13,27 @@
             <el-tag type="success">已答：{{ answeredCount }}</el-tag>
           </el-space>
           <el-button
-            type="danger"
+            style="margin-left: 15px"
+            type="primary"
             @click="submitConfirm"
-            :disabled="isSubmitted"
-            size="large">
+            :disabled="isSubmitted">
             提交试卷
           </el-button>
         </div>
       </div>
     </el-card>
 
+    <!-- 0单选题 1多选题 2判断题 3填空题 4问答题 -->
     <!-- 主体内容 -->
     <el-row :gutter="20">
       <!-- 题目区 -->
       <el-col :span="18">
-        <el-card class="question-area">
+        <el-card class="question-area" v-if="currentQuestion" shadow="never">
           <!-- 单选题 -->
-          <div v-if="currentQuestion.type === 'single'">
-            <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（单选题）</h3>
+          <div v-if="currentQuestion.type === '0'">
+            <el-text>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（单选题）</h3>
+            </el-text>
             <el-radio-group v-model="answers[currentIndex]">
               <el-radio
                 v-for="(option, i) in currentQuestion.options"
@@ -41,8 +46,10 @@
           </div>
 
           <!-- 多选题 -->
-          <div v-if="currentQuestion.type === 'multiple'">
-            <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（多选题）</h3>
+          <div v-if="currentQuestion.type === '1'">
+            <el-text>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（多选题）</h3>
+            </el-text>
             <el-checkbox-group v-model="answers[currentIndex]">
               <el-checkbox
                 v-for="(option, i) in currentQuestion.options"
@@ -54,9 +61,41 @@
             </el-checkbox-group>
           </div>
 
+          <!-- 单选题 -->
+          <div v-if="currentQuestion.type === '2'">
+            <el-text>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（判断题）</h3>
+            </el-text>
+            <el-radio-group v-model="answers[currentIndex]">
+              <el-radio
+                v-for="(option, i) in currentQuestion.options"
+                :key="i"
+                :label="option.value"
+                class="option-item">
+                {{ String.fromCharCode(65 + i) }}. {{ option.text }}
+              </el-radio>
+            </el-radio-group>
+          </div>
+
           <!-- 填空题 -->
-          <div v-if="currentQuestion.type === 'fill'">
-            <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（填空题）</h3>
+          <div v-if="currentQuestion.type === '3'">
+            <el-text>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（填空题）</h3>
+            </el-text>
+            <el-input
+              v-model="answers[currentIndex]"
+              :placeholder="currentQuestion.placeholder || '请输入答案'"
+              type="textarea"
+              rows="3"
+              clearable>
+            </el-input>
+          </div>
+
+          <!-- 简答题 -->
+          <div v-if="currentQuestion.type === '4'">
+            <el-text>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（简答题）</h3>
+            </el-text>
             <el-input
               v-model="answers[currentIndex]"
               :placeholder="currentQuestion.placeholder || '请输入答案'"
@@ -88,17 +127,21 @@
 
       <!-- 答题卡 -->
       <el-col :span="6">
-        <el-card class="answer-card">
-          <h3>答题卡</h3>
-          <div class="question-list">
-            <el-button
-              v-for="(q, index) in questions"
-              :key="index"
-              :type="getButtonType(index)"
-              circle
-              @click="jumpTo(index)">
-              {{ index + 1 }}
-            </el-button>
+        <el-card class="answer-card" shadow="never">
+          <el-text>
+            <h3>答题卡</h3>
+          </el-text>
+          <div class="question-list clear-fix">
+            <div class="float-left"
+                 v-for="(q, index) in questions"
+                 :key="index">
+              <el-button
+                :type="getButtonType(index)"
+                circle
+                @click="jumpTo(index)">
+                {{ index + 1 }}
+              </el-button>
+            </div>
           </div>
         </el-card>
       </el-col>
@@ -126,38 +169,9 @@ import {userApi} from "@/api/api.js";
 
 // 模拟试卷数据
 const paper = reactive({
-  title: 'Vue3 基础知识考试',
+  title: '',
   duration: 0, // 考试时长（秒）
-  questions: [
-    {
-      type: 'single',
-      title: 'Vue3 的 Composition API 是什么？',
-      options: [
-        { value: 'A', text: '新的组件通信方式' },
-        { value: 'B', text: '基于函数的 API 组织方式' },
-        { value: 'C', text: '状态管理方案' }
-      ],
-      answer: 'B',
-      score: 5
-    },
-    {
-      type: 'multiple',
-      title: '哪些是 Vue3 的新特性？',
-      options: [
-        { value: 'A', text: 'Teleport' },
-        { value: 'B', text: 'Suspense' },
-        { value: 'C', text: 'Options API' }
-      ],
-      answer: ['A', 'B'],
-      score: 10
-    },
-    {
-      type: 'fill',
-      title: 'Vue3 使用什么工具进行打包？',
-      answer: 'Vite',
-      score: 5
-    }
-  ]
+  questions: []
 })
 
 // 响应式状态
@@ -266,6 +280,42 @@ const getExamInfo = async (paperId, teamId) => {
     // 转换为秒并确保非负
     const remainingSeconds = Math.max(Math.floor(timeDifferenceMs / 1000), 0);
     paper.duration = remainingSeconds
+
+    // 获取题目数据
+    const topics = data.topics
+
+    topics.forEach(item => {
+      // 处理答案数据
+      let tempAnswer = null
+      if(item.answer.indexOf("#") !== -1){
+         tempAnswer = item.answer.split('#')
+      }else {
+        tempAnswer = item.answer
+      }
+      // 处理选项格式
+      let options = []
+      if(item.type === '0' || item.type === '1'){
+        options = [
+          {value: 'A', text: item.column1},
+          {value: 'B', text: item.column2},
+          {value: 'C', text: item.column3},
+          {value: 'D', text: item.column4}
+        ]
+      }else if(item.type === '2'){
+        options = [
+          {value: 'T', text: item.column1},
+          {value: 'F', text: item.column2}
+        ]
+      }
+      let topic = {
+        type: item.type,
+        title: item.title,
+        options: options,
+        score: item.score,
+        answer: tempAnswer
+      }
+      paper.questions.push(topic)
+    })
   }else {
     ElMessage.error(res.message)
   }
@@ -291,6 +341,15 @@ onUnmounted(() => clearInterval(timer))
 </script>
 
 <style scoped>
+.clear-fix{
+  overflow: hidden;
+}
+.float-right{
+  float: right;
+}
+.float-left{
+  float: left;
+}
 .exam-container {
   max-width: 1200px;
   margin: 20px auto;
@@ -327,10 +386,9 @@ onUnmounted(() => clearInterval(timer))
   text-align: center;
 }
 
-.answer-card .question-list {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  margin-top: 15px;
+.question-list > div{
+  margin-top: 5px;
+  margin-right: 5px;
 }
+
 </style>

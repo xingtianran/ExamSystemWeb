@@ -21,6 +21,12 @@
       </template>
       <el-menu-item index="1">
         <el-text>
+          <el-icon><Reading /></el-icon>
+          <span>考试首页</span>
+        </el-text>
+      </el-menu-item>
+      <el-menu-item index="2">
+        <el-text>
           <el-icon><Van /></el-icon>
           <span>退出登录</span>
         </el-text>
@@ -33,7 +39,7 @@
 import {getCurrentInstance, onMounted, ref} from 'vue'
 import {userApi} from "@/api/api.js";
 import {ElMessage} from "element-plus";
-import {Van} from "@element-plus/icons-vue";
+import {Reading, Van} from "@element-plus/icons-vue";
 import router from "@/router/index.js";
 
 const instance = getCurrentInstance();
@@ -42,6 +48,8 @@ const imagePrefix = instance.appContext.config.globalProperties.$imagePrefix;
 const activeIndex = ref('1')
 const handleSelect = (key) => {
   if(key === "1"){
+    router.push("/")
+  } else if(key === "2"){
     // 退出登录
     logout()
   }
