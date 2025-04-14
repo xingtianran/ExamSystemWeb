@@ -78,7 +78,7 @@
           </div>
 
           <!-- 填空题 -->
-          <div v-if="currentQuestion.type === '3'">
+<!--          <div v-if="currentQuestion.type === '3'">
             <el-text>
               <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（填空题）</h3>
             </el-text>
@@ -89,7 +89,7 @@
               rows="3"
               clearable>
             </el-input>
-          </div>
+          </div>-->
 
           <!-- 简答题 -->
           <div v-if="currentQuestion.type === '4'">
@@ -166,9 +166,11 @@ import {ref, reactive, computed, onMounted, onUnmounted, nextTick} from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {useRoute} from "vue-router";
 import {userApi} from "@/api/api.js";
+import router from "@/router/index.js";
 
 // 模拟试卷数据
 const paper = reactive({
+  id: '',
   title: '',
   duration: 0, // 考试时长（秒）
   questions: []
@@ -245,21 +247,35 @@ const submitConfirm = () => {
 const submitExam = async () => {
   isSubmitted.value = true
   clearInterval(timer)
-
-  // 计算得分
-  const score = questions.value.reduce((total, q, index) => {
-    const answer = answers.value[index]
-    if (!answer) return total
-
-    if (q.type === 'multiple') {
-      return answer.sort().join('') === q.answer.sort().join('')
-        ? total + q.score
-        : total
+  console.log(answers.value)
+  // 将题目编号、答案和试卷编号上传至服务器
+  let data = {
+    id : paper.id,
+    topics: []
+  }
+  for(let i = 0; i < questions.value.length; i++){
+    // 如果是数组的话，就是多选，处理多选格式
+    if(Array.isArray(answers.value[i])){
+      let tempAnswer = ''
+      answers.value[i].forEach(item => {
+        tempAnswer += item + '#'
+      })
+      answers.value[i] = tempAnswer.slice(0, -1)
     }
-    return answer === q.answer ? total + q.score : total
-  }, 0)
-
-  ElMessage.success(`考试结束！得分：${score}/${questions.value.reduce((t, q) => t + q.score, 0)}`)
+    let topic = {
+      id : questions.value[i].id,
+      answer: answers.value[i]
+    }
+    data.topics.push(topic)
+  }
+  // 获取数据data，上传到服务器
+  const res = await userApi.markPaper(data)
+  if(res.code === 200){
+    ElMessage.success(res.message)
+    await router.push('/')
+  }else {
+    ElMessage.error(res.message)
+  }
   showSubmitDialog.value = false
 }
 
@@ -308,6 +324,7 @@ const getExamInfo = async (paperId, teamId) => {
         ]
       }
       let topic = {
+        id: item.id,
         type: item.type,
         title: item.title,
         options: options,
@@ -327,6 +344,7 @@ onMounted(async () => {
   // 获取考试详情
   const paperId = route.query.paperId
   const teamId = route.query.teamId
+  paper.id = paperId
   if (paperId && teamId) {
     await getExamInfo(paperId, teamId)
   }

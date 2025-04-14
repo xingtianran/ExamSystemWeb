@@ -64,7 +64,7 @@
 import {onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 import {paperApi, teamApi} from "@/api/api.js";
-import {ElMessage} from "element-plus";
+import {ElMessage, ElMessageBox} from "element-plus";
 import {dateFormat} from "@/utils/date.js";
 import router from "@/router/index.js";
 
@@ -152,6 +152,18 @@ onMounted(() => {
   // 如果有id就去获取试卷信息
   if(id){
     getPaper(id)
+  }else {
+    ElMessageBox.confirm('请前往试卷管理页面，选择发布的试卷。', '提示', {
+      confirmButtonText: '确定',
+      showCancelButton: false,
+      closeOnClickModal: false,
+      showClose: false,
+      buttonSize: "small"
+    }).then(() => {
+      router.push("/content/manage-paper")
+    }).catch(() => {
+      router.push("/content/manage-paper")
+    })
   }
   getTeams()
 })

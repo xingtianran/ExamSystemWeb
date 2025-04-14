@@ -21,7 +21,9 @@ const userApi = {
   // 获取我的试卷
   getMyExam: () => get('/Users/GetMyExam'),
   // 获取单个考试信息详情
-  getExamDetail: (paperId, teamId) => get('/Users/GetExamDetail/' + paperId + '/' + teamId)
+  getExamDetail: (paperId, teamId) => get('/Users/GetExamDetail/' + paperId + '/' + teamId),
+  // 批改试卷
+  markPaper: (data) => post('/Users/MarkPaper', data)
 };
 
 // 图片API
