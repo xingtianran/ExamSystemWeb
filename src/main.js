@@ -20,7 +20,7 @@ import {
   Tickets,
   Fries,
   Grape,
-  User, Operation, Bicycle, Printer,Brush,Notebook, OfficeBuilding
+  User, Operation, Bicycle, Printer, Brush, Notebook, OfficeBuilding, Files
 } from "@element-plus/icons-vue";
 
 const app = createApp(App)
@@ -48,7 +48,7 @@ app.component('bicycle', Bicycle)
 
 app.component('notebook', Notebook)
 app.component('officeBuilding', OfficeBuilding)
-
+app.component('files', Files)
 
 // 图片前缀
 app.config.globalProperties.$imagePrefix = '/api/admin/Oss/DownloadFile/';

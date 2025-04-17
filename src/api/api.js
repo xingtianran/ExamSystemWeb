@@ -23,7 +23,9 @@ const userApi = {
   // 获取单个考试信息详情
   getExamDetail: (paperId, teamId) => get('/Users/GetExamDetail/' + paperId + '/' + teamId),
   // 批改试卷
-  markPaper: (data) => post('/Users/MarkPaper', data)
+  markPaper: (data) => post('/Users/MarkPaper', data),
+  // 获取我的错题集
+  getErrorSets: () => get('/Users/GetErrorSets')
 };
 
 // 图片API

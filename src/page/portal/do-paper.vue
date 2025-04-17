@@ -32,7 +32,7 @@
           <!-- 单选题 -->
           <div v-if="currentQuestion.type === '0'">
             <el-text>
-              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（单选题）</h3>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.content }}（单选题）</h3>
             </el-text>
             <el-radio-group v-model="answers[currentIndex]">
               <el-radio
@@ -48,7 +48,7 @@
           <!-- 多选题 -->
           <div v-if="currentQuestion.type === '1'">
             <el-text>
-              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（多选题）</h3>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.content }}（多选题）</h3>
             </el-text>
             <el-checkbox-group v-model="answers[currentIndex]">
               <el-checkbox
@@ -61,10 +61,10 @@
             </el-checkbox-group>
           </div>
 
-          <!-- 单选题 -->
+          <!-- 判断题 -->
           <div v-if="currentQuestion.type === '2'">
             <el-text>
-              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（判断题）</h3>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.content }}（判断题）</h3>
             </el-text>
             <el-radio-group v-model="answers[currentIndex]">
               <el-radio
@@ -78,23 +78,23 @@
           </div>
 
           <!-- 填空题 -->
-<!--          <div v-if="currentQuestion.type === '3'">
+          <div v-if="currentQuestion.type === '3'">
             <el-text>
-              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（填空题）</h3>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.content }}（填空题）</h3>
             </el-text>
             <el-input
               v-model="answers[currentIndex]"
-              :placeholder="currentQuestion.placeholder || '请输入答案'"
+              :placeholder="currentQuestion.placeholder || '请输入答案，请用#号分隔'"
               type="textarea"
               rows="3"
               clearable>
             </el-input>
-          </div>-->
+          </div>
 
           <!-- 简答题 -->
           <div v-if="currentQuestion.type === '4'">
             <el-text>
-              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.title }}（简答题）</h3>
+              <h3>{{ currentIndex + 1 }}. {{ currentQuestion.content }}（简答题）</h3>
             </el-text>
             <el-input
               v-model="answers[currentIndex]"
@@ -327,6 +327,7 @@ const getExamInfo = async (paperId, teamId) => {
         id: item.id,
         type: item.type,
         title: item.title,
+        content: item.content,
         options: options,
         score: item.score,
         answer: tempAnswer

@@ -292,12 +292,26 @@ const addItem = async () => {
           topic.value.column2 = judgeOptions.value[1].content
         }else if(topic.value.type === "3"){
           // 填空题答案为第一个值，用不着先填上
-          topic.value.answer = blankOptions.value[0].content
-
-          topic.value.column1 = blankOptions.value[0].content
-          topic.value.column2 = blankOptions.value[1].content
-          topic.value.column3 = blankOptions.value[2].content
-          topic.value.column4 = blankOptions.value[3].content
+          // topic.value.answer = blankOptions.value[0].content
+          // 答案中填写填空的数量
+          let count = 0
+          if(blankOptions.value[0].content !== ''){
+            topic.value.column1 = blankOptions.value[0].content
+            count++
+          }
+          if(blankOptions.value[1].content !== ''){
+            topic.value.column2 = blankOptions.value[1].content
+            count++
+          }
+          if(blankOptions.value[2].content !== ''){
+            topic.value.column3 = blankOptions.value[2].content
+            count++
+          }
+          if(blankOptions.value[3].content !== ''){
+            topic.value.column4 = blankOptions.value[3].content
+            count++
+          }
+          topic.value.answer = count
         }
         // 选项的话就判断一个
         if(topic.value.column1 === ""){

@@ -40,6 +40,9 @@ const login = import('@/page/login/login-content.vue');
 // 做题
 const doPaper = import('@/page/portal/do-paper.vue')
 
+// 错题集
+const errorInfo = import('@/page/portal/error-info.vue');
+
 
 
 export const routes= [
@@ -144,6 +147,12 @@ export const routes= [
         name: '在线考试',
         icon: 'notebook',
         component: portalIndex
+      },
+      {
+        path: '/error-info',
+        name: '错题集',
+        icon: 'files',
+        component: errorInfo
       },
       {
         path: '/team-info',
