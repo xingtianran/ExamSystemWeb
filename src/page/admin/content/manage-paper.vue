@@ -24,6 +24,7 @@
         <el-button @click="resetSearch">重置</el-button>
       </div>
       <div class="float-right">
+        <el-button :icon="ZoomIn" @click="myDialog = true">自动组卷</el-button>
         <el-button type="primary" :icon="EditPen" @click="router.push('/content/add-paper')">添加试卷</el-button>
       </div>
     </div>
@@ -78,6 +79,50 @@
     </div>
   </div>
 
+
+<div>
+  <el-dialog
+    v-model="myDialog"
+    title="自动组卷"
+    width="500"
+    :before-close="handleClose"
+  >
+    <div>
+      <el-form ref="formRef" :model="paper" label-width="auto" style="max-width: 600px">
+        <el-form-item label="试卷名称：" prop="name">
+          <el-input placeholder="名称" v-model="paper.name" />
+        </el-form-item>
+        <el-form-item label="试卷类目：" prop="password">
+          <el-tree-select
+            v-model="paper.categoryId"
+            :data="categories"
+            :render-after-expand="false"
+            :default-value="null"
+            placeholder="类目"
+            check-strictly=true
+            :props="{ label: 'name', value: 'id' }"
+          />
+        </el-form-item>
+        <el-form-item label="试卷分数：" prop="password">
+          <el-input-number
+            v-model="paper.score"
+            :min="0"
+            :max="100"
+            controls-position="right"
+          />
+        </el-form-item>
+      </el-form>
+    </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button size="small" @click="handleClose()">取消</el-button>
+        <el-button size="small" type="primary">
+          开始组卷
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
+</div>
 </template>
 
 <script setup>
@@ -85,11 +130,13 @@ import { onMounted, ref} from 'vue'
 import {categoryApi, paperApi} from "@/api/api.js";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {dateFormat} from "@/utils/date.js";
-import {EditPen, Search} from "@element-plus/icons-vue";
+import {EditPen, Search, ZoomIn} from "@element-plus/icons-vue";
 import router from "@/router/index.js";
 
 
 const papers = ref([])
+
+const myDialog = ref(false)
 
 const loading = ref(false)
 
@@ -106,7 +153,26 @@ const searchInfo = ref({
 
 const categories = ref([])
 
+const paper = ref({
+  title: '',
+  categoryId: '',
+  score: 0
+})
 
+// 关闭模态框
+const handleClose = () => {
+  ElMessageBox.confirm('确认要关闭弹出窗口吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    buttonSize: "small"
+  })
+    .then(() => {
+      paper.value.title = ''
+      paper.value.categoryId = ''
+      paper.value.score = null
+      myDialog.value = false
+    })
+}
 
 // 重置搜索内容
 const resetSearch = () => {
@@ -114,6 +180,18 @@ const resetSearch = () => {
   searchInfo.value.categoryId = null
   pageInfo.value.page = 1
   getPapers(pageInfo.value, searchInfo.value)
+}
+
+
+// 获取全部类目
+const getCategoryList = () => {
+  categoryApi.getCategoryList().then(res => {
+    if (res.code === 200){
+      categories.value = res.data
+    }else {
+      ElMessage.error(res.message)
+    }
+  })
 }
 
 // 翻页
@@ -145,16 +223,8 @@ const getPapers = (pageInfo, searchInfo) => {
   })
 }
 
-// 获取全部类目
-const getCategoryList = () => {
-  categoryApi.getCategoryList().then(res => {
-    if (res.code === 200){
-      categories.value = res.data
-    }else {
-      ElMessage.error(res.message)
-    }
-  })
-}
+
+
 
 // 改变开关
 const handleSwitchChange =  async (data) => {

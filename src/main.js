@@ -20,7 +20,7 @@ import {
   Tickets,
   Fries,
   Grape,
-  User, Operation, Bicycle, Printer, Brush, Notebook, OfficeBuilding, Files
+  User, Operation, Bicycle, Printer, Brush, Notebook, OfficeBuilding, Files, ZoomIn
 } from "@element-plus/icons-vue";
 
 const app = createApp(App)

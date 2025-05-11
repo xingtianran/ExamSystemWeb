@@ -237,7 +237,7 @@
 import {computed, nextTick, onMounted, ref, toRefs, watch} from "vue";
 import {categoryApi, paperApi, topicApi} from "@/api/api.js";
 import {ElMessage} from "element-plus";
-import {Delete, Plus, Search} from "@element-plus/icons-vue";
+import {Delete, Plus, Search, ZoomIn} from "@element-plus/icons-vue";
 import {dateFormat} from "@/utils/date.js";
 import router from "@/router/index.js";
 
@@ -397,8 +397,13 @@ const addTopicIds = (id) => {
   currentTopicSet.value = id
   topicDialogVisible.value = true
   getTopics(pageInfo.value)
+}
+
+// 自动分配题目
+const AutoAssign = (id) => {
 
 }
+
 // 确认选择题目
 const selectTopics = () => {
   if(selectedRowKeys.value.length === 0){
